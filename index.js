@@ -1,5 +1,6 @@
 const express = require("express")
 const bodyParser  = require("body-parser")
+const MessagingResponse = require("twilio").twiml.MessagingResponse
 
 var app = express()
 app.use(bodyParser.urlencoded({extended: true}))
@@ -19,11 +20,21 @@ const client = require('twilio')(accountSid, authToken);
 //       .then(message => console.log(message.sid))
 //       .done();
 
+app.get("/", function(req, res){
+  res.sendFile(__dirname + "/test.html")
+})
 
 app.post("/incoming", function(req, res){
   console.log(req.body)
+  const twiml = new MessagingResponse()
+
+  twiml.message("Thanks for your message")
+  res.writeHead(200, {"Content-Type": "text/xml"})
+  res.end(twiml.toString())
 })
 
-app.listen(process.env.PORT, function(){
-  console.log("Server is running on port " + process.env.PORT)
+var port = process.env.PORT ? process.env.PORT : 3000
+
+app.listen(port, function(){
+  console.log("Server is running on port " + port)
 })
