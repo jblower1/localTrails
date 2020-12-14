@@ -17,13 +17,16 @@ const messages = require("./messages")
 //state of answers
 var question = true
 var questionNumber = 0
+var gameStarted = false
 
 var routeMessage = function(messageBody){
   const message = messageBody.Body.toLowerCase()
-  console.log("Routing message")
-  console.log("Expecting question? " + question )
-  console.log("Message Receieved: " + message)
-  //console.log("Message as Number: " + Number.isInteger(parseInt(message)))
+
+  console.log("Message being routed.")
+  if(isRequestingPreviousAnswers(message)){
+    setExpectingQuestion()
+    return "Placeholder to return previous answers"
+  }
 
   if(isExpectingAnswer()){
     return processAnswer(message)
@@ -35,17 +38,21 @@ var routeMessage = function(messageBody){
 }
 
 var processQuestion = function(message){
-  if(message === "start" && questionNumber === 0) {
+  if(message === "start" && !gameStarted) {
+      startGame()
+      console.log("Trail started")
       setExpectingQuestion()
       // setQuestion(1)
       return messages.start
-  } else if(isQuestionFormat(message) && isExpectingQuestion()){
+  } else if(gameStarted && isExpectingQuestion() && isQuestionFormat(message)){
       //tell the system we are now expecting an answer to the question that is about to be presented to the user
+      console.log("Message is a question request")
       setExpectingAnswer()
       setQuestion(message)
-      console.log("Now ready to receive an question? " + question)
+      // console.log("Now ready to receive an question? " + question)
       return getQuestionText()
   } else {
+      console.log("Could not process incoming message")
       setExpectingQuestion()
       console.log("Now ready to receive an question? " + question)
       return "Sorry, I don't recognise what you're trying to do. Please either start the game or request a question number"
@@ -53,13 +60,18 @@ var processQuestion = function(message){
 }
 
 var processAnswer = function(message){
+  console.log("Message is an answer")
   nextQuestion()
   setExpectingQuestion()
-  if(message === "skip"){
+  if(message === "skip" || message === "next"){
     return skipAnswer()
   }else{
     return "Thanks for your answer. Please enter a question number or type \"next\"."
   }
+}
+
+var isRequestingPreviousAnswers = function(message){
+  return message === "show me my answers"
 }
 
 var skipAnswer = function(){
@@ -76,12 +88,17 @@ var checkAnswer = function(answer){
 
 }
 
-var nextQuestion = function(){
-  questionNumber++
+var startGame = function(){
+  gameStarted = true
 }
 
-var getQuestionText = function(){
-  return messages[questionNumber] ? messages[questionNumber].q : "Sorry there is no question with this number"
+//Set question variables
+var revertQuestion = function(){
+
+}
+
+var nextQuestion = function(){
+  questionNumber++
 }
 
 var setQuestion = function(number){
@@ -90,6 +107,11 @@ var setQuestion = function(number){
   }else{
     questionNumber = parseInt(number)
   }
+  console.log("Question Number: " + questionNumber)
+}
+
+var getQuestionText = function(){
+  return messages[questionNumber] ? messages[questionNumber].q : "Sorry there is no question with this number"
 }
 
 var isQuestionFormat = function(message){
@@ -111,5 +133,6 @@ var setExpectingQuestion = function(){
 var setExpectingAnswer = function(){
   question = false
 }
+
 
 module.exports.routeMessage = routeMessage

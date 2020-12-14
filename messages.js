@@ -1,7 +1,8 @@
 module.exports = {
     test: "Test message",
     start: "Thanks for starting this local trail! You are now ready to start answering questions. \n" +
-          "From now you can specify a question number or type next to recieve a question. Try it now to start. ",
+          "From now you can specify a question number or type next to recieve a question. Try it now to start. \n" +
+          "If at any point you wish to see your answers type \"show me my answers\".",
     1: {
       q: "How many vikings are guarding the bridge over the river?",
       a: ["12", "twelve"]
