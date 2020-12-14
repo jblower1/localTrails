@@ -16,7 +16,7 @@ const messages = require("./messages")
 
 //state of answers
 var question = true
-var currentQuestion = 0
+var questionNumber = 0
 
 var routeMessage = function(messageBody){
   const message = messageBody.Body.toLowerCase()
@@ -37,7 +37,7 @@ var routeMessage = function(messageBody){
 var processQuestion = function(message){
   if(message === "start" && questionNumber === 0) {
       setExpectingQuestion()
-      setQuestion(1)
+      // setQuestion(1)
       return messages.start
   } else if(isQuestionFormat(message) && isExpectingQuestion()){
       //tell the system we are now expecting an answer to the question that is about to be presented to the user
@@ -81,7 +81,7 @@ var nextQuestion = function(){
 }
 
 var getQuestionText = function(){
-  return messages[questionNumber] ? messages[questionNumber] : "Sorry there is no question with this number"
+  return messages[questionNumber] ? messages[questionNumber].q : "Sorry there is no question with this number"
 }
 
 var setQuestion = function(number){
