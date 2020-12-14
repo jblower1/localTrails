@@ -23,6 +23,11 @@ var routeMessage = function(messageBody){
   const message = messageBody.Body.toLowerCase()
 
   console.log("Message being routed.")
+  if(isGameRestart(message)){
+    endGame()
+    return processQuestion("start")
+  }
+
   if(isRequestingPreviousAnswers(message)){
     setExpectingQuestion()
     return "Placeholder to return previous answers"
@@ -80,16 +85,33 @@ var skipAnswer = function(){
   return "Sure, please request a new question. You can try this one again later."
 }
 
-var isAnswerCorrect = function(){
-
-}
-
-var checkAnswer = function(answer){
+var restartGame = function(){
 
 }
 
 var startGame = function(){
   gameStarted = true
+}
+
+var isGameRestart = function(message){
+  return message === "restart"
+}
+
+var endGame = function(){
+    gameStarted = false
+    resetAnswers()
+}
+
+var resetAnswers = function(){
+  // TODO: reset answers when they are persisted
+}
+
+var isAnswerCorrect = function(){
+//TODO: determine if answers are correct for tracking persistency1
+}
+
+var checkAnswer = function(answer){
+
 }
 
 //Set question variables
@@ -111,7 +133,13 @@ var setQuestion = function(number){
 }
 
 var getQuestionText = function(){
-  return messages[questionNumber] ? messages[questionNumber].q : "Sorry there is no question with this number"
+  const questionObj = messages[questionNumber]
+  if(questionObj){
+    return questionObj.q
+  }else{
+    setExpectingQuestion()
+    return "Sorry there is no question with this number"
+  }
 }
 
 var isQuestionFormat = function(message){
