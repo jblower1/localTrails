@@ -1,5 +1,6 @@
 const express = require("express")
 const bodyParser  = require("body-parser")
+const questionRouter = require("./questionRouter")
 const MessagingResponse = require("twilio").twiml.MessagingResponse
 
 var app = express()
@@ -28,7 +29,9 @@ app.post("/incoming", function(req, res){
   console.log(req.body)
   const twiml = new MessagingResponse()
 
-  twiml.message("Thanks for your message")
+  var responseMessage = questionRouter.routeMessage(req.body)
+
+  twiml.message(responseMessage)
   res.writeHead(200, {"Content-Type": "text/xml"})
   res.end(twiml.toString())
 })
