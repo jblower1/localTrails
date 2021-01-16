@@ -13,50 +13,77 @@
 //  }
 
 const messages = require("./messages")
+const rules = require("./rules")
 
-//state of answers
-var question = true
+const listeningModes = {
+  standard: "STANDARD",
+  newQuestion: "NEWQUESTION"
+}
+
+//game data
+var question = true //probably don't need this anymore
 var questionNumber = 0
-var gameStarted = false
+var gameStarted = false //status of the game (in progress or not)
+var timesAnsweredIncorrect = 0 //this field will be used to calculate deducted points
+var listeningMode = listeningModes.standard //listening mode will change how messages from the user are interpreted
 
-var routeMessage = function(messageBody){
+//routing of incoming user messages
+var routeUserMessage = function(messageBody){
   const message = messageBody.Body.toLowerCase()
 
   console.log("Message being routed.")
-  if(isGameRestart(message)){
-    endGame()
-    return processQuestion("start")
+  //Initiate conversation
+  if(isRequestingWelcome(message)){
+    console.log("welcome/rules requested")
+    return getGameRules()
   }
-
+  //start/restart game
+  if(isRequestingGameStart(message)) {
+    console.log("Start game requested")
+     return gameStarted ? gameInProgress() : startGame()
+  }
+  //my answers
   if(isRequestingPreviousAnswers(message)){
-    setExpectingQuestion()
-    return "Placeholder to return previous answers"
+    // setExpectingQuestion()
+    console.log("Previous answers requested")
+    return getAnswers()
   }
-
-  if(isExpectingAnswer()){
+  //skip answer
+  if(isRequestingSkip(message)){
+    return skipAnswer() //TODO: rework skipanswer
+  }
+  //hint
+  if(isRequestingHint(message)){
+    return getHint()
+  }
+  //change answer/retake question
+  if(isRequestingChange(message)){
+    return setListeningMode(listeningModes.newQuestion)
+  }
+  //repeat
+  if(isRequestingRepeat(message)){
+    return getQuestionText()
+  }
+  //answer if none of the above, do not accept an answer unless game is in play
+  if(gameStarted){
     return processAnswer(message)
+  }else{
+    return "Sorry, I'm not sure what you're trying to do."
   }
 
-  if(isExpectingQuestion()){
-    return processQuestion(message)
-  }
 }
 
+
 var processQuestion = function(message){
-  if(message === "start" && !gameStarted) {
-      startGame()
-      console.log("Trail started")
-      setExpectingQuestion()
-      // setQuestion(1)
-      return messages.start
-  } else if(gameStarted && isExpectingQuestion() && isQuestionFormat(message)){
+  if(gameStarted && isExpectingQuestion() && isQuestionFormat(message)){
       //tell the system we are now expecting an answer to the question that is about to be presented to the user
       console.log("Message is a question request")
       setExpectingAnswer()
       setQuestion(message)
       // console.log("Now ready to receive an question? " + question)
       return getQuestionText()
-  } else {
+  }
+  else {
       console.log("Could not process incoming message")
       setExpectingQuestion()
       console.log("Now ready to receive an question? " + question)
@@ -66,31 +93,74 @@ var processQuestion = function(message){
 
 var processAnswer = function(message){
   console.log("Message is an answer")
-  nextQuestion()
-  setExpectingQuestion()
-  if(message === "skip" || message === "next"){
-    return skipAnswer()
-  }else{
-    return "Thanks for your answer. Please enter a question number or type \"next\"."
+  if(isAnswerCorrect()){
+    nextQuestion()
+    return "Well done. That's correct! \n\n" + getQuestionText()
+  }
+  else{
+    timesAnsweredIncorrect++
+    return "Bad luck! Try again"
   }
 }
 
 var isRequestingPreviousAnswers = function(message){
-  return message === "show me my answers"
+  return message === "my answers" || message === "answers"
+}
+
+var isRequestingRepeat = function(message){
+  return message === "repeat"
+}
+
+var isRequestingSkip = function(message){
+  return message === "skip"
+}
+
+var isRequestingHint = function(message){
+  return message === "hint"
+}
+
+var isRequestingChange = function(message){
+  return message === "change"
+}
+
+var isRequestingWelcome = function(message){
+  return message === "hello" || message === "hi" || message === "hey" || message === "rules"
+}
+
+var isRequestingGameStart = function(message){
+  return message === "start"
+}
+
+var gameInProgress = function(){
+  return "A game is already in progress."
 }
 
 var skipAnswer = function(){
   console.log("Question skipped")
-  setExpectingQuestion()
-  return "Sure, please request a new question. You can try this one again later."
+  // setExpectingQuestion()
+  nextQuestion()
+  return "Question skipped. You can try this one again later. \n\n" +
+         getQuestionText()
 }
 
-var restartGame = function(){
+var getHint = function(){
+  console.log("Getting hint")
+  return "Hints are currently not supported. See if you can answer without."
+}
 
+var getGameRules = function(){
+  return Object.keys(rules).reduce(function(acc, curr){
+    return acc += ` ${rules[curr]}\n\n`
+  }, "")
 }
 
 var startGame = function(){
+  endGame()
   gameStarted = true
+  console.log("Trail started")
+  nextQuestion()
+  return getQuestionText()
+  // setExpectingQuestion()
 }
 
 var isGameRestart = function(message){
@@ -110,8 +180,9 @@ var isAnswerCorrect = function(){
 //TODO: determine if answers are correct for tracking persistency1
 }
 
-var checkAnswer = function(answer){
-
+var getAnswers = function(){
+  //TODO: Implement logic for this
+  return "Placeholder to return previous answers"
 }
 
 //Set question variables
@@ -141,9 +212,13 @@ var getQuestionText = function(){
     return "Sorry there is no question with this number"
   }
 }
+//
+// var isQuestionFormat = function(message){
+//   return message === "next" || Number.isInteger(parseInt(message))
+// }
 
-var isQuestionFormat = function(message){
-  return message === "next" || Number.isInteger(parseInt(message))
+var setListeningMode = function(mode){
+  listeningMode = mode
 }
 
 var isExpectingQuestion = function(){
@@ -163,4 +238,4 @@ var setExpectingAnswer = function(){
 }
 
 
-module.exports.routeMessage = routeMessage
+module.exports.routeUserMessage = routeUserMessage

@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "pg": "^8.5.1",
     "twilio": "^3.52.0"
   }
 }
