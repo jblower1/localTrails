@@ -1,6 +1,10 @@
 const { Client } = require('pg')
-const dbCredentials = require('./dbCreds')
-const client = new Client(dbCredentials)
+const client = new Client({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB,
+    password: process.env.DB_USER_PW
+})
 client.connect()
 
 module.exports.getRules = function(callback){
