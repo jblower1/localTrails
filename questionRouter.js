@@ -13,7 +13,8 @@
 //  }
 
 const messages = require("./messages")
-const rules = require("./rules")
+// const rules = require("./rules")
+const db = require("./db/localtrails")
 
 const listeningModes = {
   standard: "STANDARD",
@@ -28,14 +29,17 @@ var timesAnsweredIncorrect = 0 //this field will be used to calculate deducted p
 var listeningMode = listeningModes.standard //listening mode will change how messages from the user are interpreted
 
 //routing of incoming user messages
-var routeUserMessage = function(messageBody){
+var routeUserMessage = function(messageBody, callback){
   const message = messageBody.Body.toLowerCase()
 
   console.log("Message being routed.")
   //Initiate conversation
   if(isRequestingWelcome(message)){
     console.log("welcome/rules requested")
-    return getGameRules()
+    getGameRules(function(rules){
+      callback(rules)
+    })
+
   }
   //start/restart game
   if(isRequestingGameStart(message)) {
@@ -103,33 +107,8 @@ var processAnswer = function(message){
   }
 }
 
-var isRequestingPreviousAnswers = function(message){
-  return message === "my answers" || message === "answers"
-}
 
-var isRequestingRepeat = function(message){
-  return message === "repeat"
-}
 
-var isRequestingSkip = function(message){
-  return message === "skip"
-}
-
-var isRequestingHint = function(message){
-  return message === "hint"
-}
-
-var isRequestingChange = function(message){
-  return message === "change"
-}
-
-var isRequestingWelcome = function(message){
-  return message === "hello" || message === "hi" || message === "hey" || message === "rules"
-}
-
-var isRequestingGameStart = function(message){
-  return message === "start"
-}
 
 var gameInProgress = function(){
   return "A game is already in progress."
@@ -148,9 +127,19 @@ var getHint = function(){
   return "Hints are currently not supported. See if you can answer without."
 }
 
-var getGameRules = function(){
-  return Object.keys(rules).reduce(function(acc, curr){
-    return acc += ` ${rules[curr]}\n\n`
+var getGameRules = function(callback){
+  var rules;
+  db.getRules(function(rows){
+    console.log("Callback from DB...")
+    console.log(rows)
+    //callback with the rows from the db. This propagates back up the calls.
+    callback(buildRuleString(rows))
+  })
+}
+
+var buildRuleString = function(rows){
+  return rows.reduce(function(acc, curr){
+    return acc += ` ${curr.ruledesc}\n\n`
   }, "")
 }
 
@@ -235,6 +224,35 @@ var setExpectingQuestion = function(){
 
 var setExpectingAnswer = function(){
   question = false
+}
+
+//********************************keyword requests
+var isRequestingPreviousAnswers = function(message){
+  return message === "my answers" || message === "answers"
+}
+
+var isRequestingRepeat = function(message){
+  return message === "repeat"
+}
+
+var isRequestingSkip = function(message){
+  return message === "skip"
+}
+
+var isRequestingHint = function(message){
+  return message === "hint"
+}
+
+var isRequestingChange = function(message){
+  return message === "change"
+}
+
+var isRequestingWelcome = function(message){
+  return message === "hello" || message === "hi" || message === "hey" || message === "rules"
+}
+
+var isRequestingGameStart = function(message){
+  return message === "start"
 }
 
 

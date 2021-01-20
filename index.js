@@ -32,14 +32,13 @@ app.get("/", function(req, res){
 app.post("/incoming", function(req, res){
   console.log(req.body)
   const twiml = new MessagingResponse()
+  // var responseMessage =
+  questionRouter.routeUserMessage(req.body, function(responseMessage){
+    twiml.message(responseMessage)
+    res.writeHead(200, {"Content-Type": "text/xml"})
+    res.end(twiml.toString())
 
-  var responseMessage = questionRouter.routeUserMessage(req.body)
-
-  twiml.message(responseMessage)
-  res.writeHead(200, {"Content-Type": "text/xml"})
-  res.end(twiml.toString())
-
-  // testMessage()
+  })
 })
 
 var port = process.env.PORT ? process.env.PORT : 3000
