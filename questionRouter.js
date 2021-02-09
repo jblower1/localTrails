@@ -15,6 +15,7 @@
 const messages = require("./messages")
 // const rules = require("./rules")
 const db = require("./db/localtrails")
+const keywords = require("./keywords")
 
 const listeningModes = {
   standard: "STANDARD",
@@ -34,7 +35,7 @@ var routeUserMessage = function(messageBody, callback){
 
   console.log("Message being routed.")
   //Initiate conversation
-  if(isRequestingWelcome(message)){
+  if(keywords.isRequestingWelcome(message)){
     console.log("welcome/rules requested")
     getGameRules(function(rules){
       callback(rules)
@@ -42,30 +43,30 @@ var routeUserMessage = function(messageBody, callback){
 
   }
   //start/restart game
-  if(isRequestingGameStart(message)) {
+  if(keywords.isRequestingGameStart(message)) {
     console.log("Start game requested")
      return gameStarted ? gameInProgress() : startGame()
   }
   //my answers
-  if(isRequestingPreviousAnswers(message)){
+  if(keywords.isRequestingPreviousAnswers(message)){
     // setExpectingQuestion()
     console.log("Previous answers requested")
     return getAnswers()
   }
   //skip answer
-  if(isRequestingSkip(message)){
+  if(keywords.isRequestingSkip(message)){
     return skipAnswer() //TODO: rework skipanswer
   }
   //hint
-  if(isRequestingHint(message)){
+  if(keywords.isRequestingHint(message)){
     return getHint()
   }
   //change answer/retake question
-  if(isRequestingChange(message)){
+  if(keywords.isRequestingChange(message)){
     return setListeningMode(listeningModes.newQuestion)
   }
   //repeat
-  if(isRequestingRepeat(message)){
+  if(keywords.isRequestingRepeat(message)){
     return getQuestionText()
   }
   //answer if none of the above, do not accept an answer unless game is in play
@@ -225,35 +226,5 @@ var setExpectingQuestion = function(){
 var setExpectingAnswer = function(){
   question = false
 }
-
-//********************************keyword requests
-var isRequestingPreviousAnswers = function(message){
-  return message === "my answers" || message === "answers"
-}
-
-var isRequestingRepeat = function(message){
-  return message === "repeat"
-}
-
-var isRequestingSkip = function(message){
-  return message === "skip"
-}
-
-var isRequestingHint = function(message){
-  return message === "hint"
-}
-
-var isRequestingChange = function(message){
-  return message === "change"
-}
-
-var isRequestingWelcome = function(message){
-  return message === "hello" || message === "hi" || message === "hey" || message === "rules"
-}
-
-var isRequestingGameStart = function(message){
-  return message === "start"
-}
-
 
 module.exports.routeUserMessage = routeUserMessage

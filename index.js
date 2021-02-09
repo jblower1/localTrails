@@ -12,7 +12,7 @@ const authToken = process.env.TWILIO_AUTH_TOKEN
 const client = require('twilio')(accountSid, authToken);
 
 //GET path used in localhost to serve an html with a text box to enter text to check response
-app.get("/", function(req, res){
+app.get("/test", function(req, res){
   res.sendFile(__dirname + "/test.html")
 })
 
