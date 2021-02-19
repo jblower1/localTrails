@@ -14,7 +14,7 @@
 
 const messages = require("./messages")
 // const rules = require("./rules")
-const db = require("./db/localtrails")
+const db = require("./db/localTrailsDb")
 const keywords = require("./keywords")
 
 const listeningModes = {
@@ -28,6 +28,11 @@ var questionNumber = 0
 var gameStarted = false //status of the game (in progress or not)
 var timesAnsweredIncorrect = 0 //this field will be used to calculate deducted points
 var listeningMode = listeningModes.standard //listening mode will change how messages from the user are interpreted
+
+var currentQuestionText = ""
+var currentHint = ""
+var currentAnswer = ""
+
 
 //routing of incoming user messages
 var routeUserMessage = function(messageBody, callback){
@@ -43,84 +48,68 @@ var routeUserMessage = function(messageBody, callback){
 
   }
   //start/restart game
-  if(keywords.isRequestingGameStart(message)) {
+  else if(keywords.isRequestingGameStart(message)) {
     console.log("Start game requested")
-     return gameStarted ? gameInProgress() : startGame()
+    if(gameStarted) return gameInProgress()
+    else startGame(function(question){
+       callback(question)
+     })
   }
   //my answers
-  if(keywords.isRequestingPreviousAnswers(message)){
+  else if(keywords.isRequestingPreviousAnswers(message)){
     // setExpectingQuestion()
     console.log("Previous answers requested")
-    return getAnswers()
+    callback(getAnswers())
   }
   //skip answer
-  if(keywords.isRequestingSkip(message)){
-    return skipAnswer() //TODO: rework skipanswer
+  else if(keywords.isRequestingSkip(message)){
+    skipAnswer(callback) //TODO: rework skipanswer
   }
   //hint
-  if(keywords.isRequestingHint(message)){
-    return getHint()
+  else if(keywords.isRequestingHint(message)){
+    callback(getHint())
   }
   //change answer/retake question
-  if(keywords.isRequestingChange(message)){
-    return setListeningMode(listeningModes.newQuestion)
+  else if(keywords.isRequestingChange(message)){
+    callback(setListeningMode(listeningModes.newQuestion))
   }
   //repeat
-  if(keywords.isRequestingRepeat(message)){
-    return getQuestionText()
+  else if(keywords.isRequestingRepeat(message)){
+    callback(currentQuestionText)
   }
   //answer if none of the above, do not accept an answer unless game is in play
-  if(gameStarted){
-    return processAnswer(message)
+  else if(gameStarted){
+      processAnswer(message, callback)
   }else{
-    return "Sorry, I'm not sure what you're trying to do."
+    callback("Sorry, I'm not sure what you're trying to do.")
   }
 
 }
 
-
-var processQuestion = function(message){
-  if(gameStarted && isExpectingQuestion() && isQuestionFormat(message)){
-      //tell the system we are now expecting an answer to the question that is about to be presented to the user
-      console.log("Message is a question request")
-      setExpectingAnswer()
-      setQuestion(message)
-      // console.log("Now ready to receive an question? " + question)
-      return getQuestionText()
-  }
-  else {
-      console.log("Could not process incoming message")
-      setExpectingQuestion()
-      console.log("Now ready to receive an question? " + question)
-      return "Sorry, I don't recognise what you're trying to do. Please either start the game or request a question number"
-  }
-}
-
-var processAnswer = function(message){
-  console.log("Message is an answer")
-  if(isAnswerCorrect()){
+var processAnswer = function(message, callback){
+  if(isAnswerCorrect(message)){
     nextQuestion()
-    return "Well done. That's correct! \n\n" + getQuestionText()
+    getQuestionData(questionNumber, function(question){
+      callback(`Well done! ${message} was correct. \n\n ${question}`)
+    })
   }
   else{
     timesAnsweredIncorrect++
-    return "Bad luck! Try again"
+    callback("Bad luck! Try again")
   }
 }
-
-
-
 
 var gameInProgress = function(){
   return "A game is already in progress."
 }
 
-var skipAnswer = function(){
+var skipAnswer = function(callback){
   console.log("Question skipped")
   // setExpectingQuestion()
   nextQuestion()
-  return "Question skipped. You can try this one again later. \n\n" +
-         getQuestionText()
+  getQuestionData(questionNumber, function(question){
+    callback(`Question skipped. You can try this one again later. \n\n ${question}`)
+  })
 }
 
 var getHint = function(){
@@ -144,15 +133,36 @@ var buildRuleString = function(rows){
   }, "")
 }
 
-var startGame = function(){
+var startGame = function(callback){
   endGame()
   gameStarted = true
   console.log("Trail started")
   nextQuestion()
-  return getQuestionText()
-  // setExpectingQuestion()
+  getQuestionData(questionNumber, callback)
 }
 
+var getQuestionData = function(questionId, callback){
+  db.getQuestionText(questionId, function(rows){
+    console.log("Callback from DB...")
+    console.log(rows)
+    callback(extractQuestion(rows))
+  })
+}
+
+var extractQuestion = function(rows){
+  if(rows[0].questiontext){
+    currentQuestionText = rows[0].questiontext
+    currentAnswer = rows[0].answer
+    currentHint = rows[0].hint
+    return currentQuestionText
+  }else{
+    currentQuestionText = ""
+    currentAnswer = ""
+    currentHint = ""
+    return "No remaining questions!"
+  }
+  // return rows[0].questiontext ? rows[0].questiontext : rows
+}
 var isGameRestart = function(message){
   return message === "restart"
 }
@@ -166,8 +176,9 @@ var resetAnswers = function(){
   // TODO: reset answers when they are persisted
 }
 
-var isAnswerCorrect = function(){
+var isAnswerCorrect = function(userAnswer){
 //TODO: determine if answers are correct for tracking persistency1
+  return currentAnswer.toUpperCase() === userAnswer.toUpperCase()
 }
 
 var getAnswers = function(){
@@ -193,7 +204,7 @@ var setQuestion = function(number){
   console.log("Question Number: " + questionNumber)
 }
 
-var getQuestionText = function(){
+var getQuestionTextLocal = function(){
   const questionObj = messages[questionNumber]
   if(questionObj){
     return questionObj.q
@@ -202,10 +213,6 @@ var getQuestionText = function(){
     return "Sorry there is no question with this number"
   }
 }
-//
-// var isQuestionFormat = function(message){
-//   return message === "next" || Number.isInteger(parseInt(message))
-// }
 
 var setListeningMode = function(mode){
   listeningMode = mode

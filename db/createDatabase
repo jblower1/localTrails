@@ -1,0 +1,1 @@
+create table quesions ( questionid integer primary key, questiontext varchar(500),answer varchar(50), hint varchar(500) ); 
