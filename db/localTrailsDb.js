@@ -11,28 +11,28 @@ module.exports.getRules = function(callback){
   console.log("Getting rules from db")
   client.query('SELECT ruledesc FROM rules ORDER BY rule_order ASC', function(err, res){
     if(err){
-      console.log(err)
+      // console.log(err)
       // client.end()
-      return "Sorry, there was a problem reading from the database"
+      callback(new Error("Sorry, there was a problem reading from the database"))
     }else if(res){
       // console.log(res.rows)
       // client.end()
-      callback(res.rows)
+      callback(null, res.rows)
     }
   })
 }
 
 module.exports.getQuestionText = function(questionId, callback){
-  console.log("Getting question")
+  // console.log("Getting question")
   client.query('SELECT questiontext, answer, hint FROM questions WHERE questionid = $1', [questionId], function(err, res){
     if(err){
-      console.log(err)
+      // console.log(err)
       // client.end()
-      callback("Sorry, there was a problem reading from the database")
+      callback(new Error("Sorry, there was a problem reading from the database"))
     }else if(res){
       // console.log(res.rows)
       // client.end()
-      callback(res.rows)
+      callback(null, res.rows)
     }
   })
 }

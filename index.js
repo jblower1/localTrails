@@ -20,8 +20,12 @@ app.get("/test", function(req, res){
 app.post("/incoming", function(req, res){
   console.log(req.body)
   const twiml = new MessagingResponse()
-  questionRouter.routeUserMessage(req.body, function(responseMessage){
-    twiml.message(responseMessage)
+  questionRouter.routeUserMessage(req.body, function(error, responseMessage){
+    if(error){
+      twiml.message(String(error))
+    }{
+      twiml.message(responseMessage)
+    }
     res.writeHead(200, {"Content-Type": "text/xml"})
     res.end(twiml.toString())
 

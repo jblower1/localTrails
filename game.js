@@ -22,16 +22,16 @@ module.exports.Game = class{
     startGame(callback){
         this.endGame()
         this.gameStarted = true
-        console.log("Trail started")
+        // console.log("Trail started")
         this.nextQuestion()
         this.getQuestionData(this.questionNumber, callback)
     }
 
     getQuestionData(questionId, callback){
-        db.getQuestionText(questionId, function(rows){
-          console.log("Callback from DB...")
-          console.log(rows)
-          callback(this.extractQuestion(rows))
+        db.getQuestionText(questionId, function(error, rows){
+        //   console.log("Callback from DB...")
+        //   console.log(rows)
+          callback(error, this.extractQuestion(rows))
         }.bind(this))
       }
       
@@ -50,7 +50,8 @@ module.exports.Game = class{
       }
     endGame(){
         this.gameStarted = false
-        this.resetAnswers()
+        this.questionNumber = 0
+        // this.resetAnswers()
     }
     
     resetAnswers(){
@@ -96,28 +97,18 @@ module.exports.Game = class{
     }
       
     getGameRules(callback){
-        var rules;
-        db.getRules(function(rows){
-          console.log("Callback from DB...")
-          console.log(rows)
+        db.getRules(function(error, rows){
           //callback with the rows from the db. This propagates back up the calls.
-          callback(this.buildRuleString(rows))
+          callback(error, this.buildRuleString(rows))
         }.bind(this))
     }
       
     buildRuleString(rows){
         return rows.reduce(function(acc, curr){
-          return acc += ` ${curr.ruledesc}\n\n`
+          return acc += `${curr.ruledesc}\n\n`
         }, "")
     }
-    setQuestion(number){
-        if(number === "next"){
-          this.nextQuestion()
-        }else{
-          questionNumber = parseInt(number)
-        }
-        console.log("Question Number: " + questionNumber)
-      }
+    
     get phoneNumber(){
         return this._phoneNumber
     }
@@ -155,7 +146,7 @@ module.exports.Game = class{
         this._currentQuestionText = currentQuestionText
     }
     get currentHint(){
-        return "Hints are currently not supported. See if you can answer without."
+        return this._currentHint ? this._currentHint : "This question does not currently have a hint"
         // return this._currentHint
     }
     set currentHint(currentHint){
