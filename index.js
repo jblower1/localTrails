@@ -29,14 +29,11 @@ app.post("/incoming", function(req, res){
   })
 })
 
-var port = process.env.PORT //? process.env.PORT : 3000
+var port = process.env.PORT 
 
 app.listen(port, function(){
   console.log("Server is running on port " + port)
 })
-
-
-
 
 // console.log("Test message being sent...")
 function testMessage(){
@@ -49,3 +46,18 @@ function testMessage(){
         .then(message => console.log(message.sid))
         .done();
 }
+
+
+// {
+//    SmsMessageSid: 'SM2da198160ae42e24995b17e4d49e3a46',
+//    NumMedia: '0',
+//    SmsSid: 'SM2da198160ae42e24995b17e4d49e3a46',
+//    SmsStatus: 'received',
+//    Body: 'Hello',
+//    To: 'whatsapp:+14155238886',
+//    NumSegments: '1',
+//    MessageSid: 'SM2da198160ae42e24995b17e4d49e3a46',
+//    AccountSid: 'AC8a0bd93cdca1316294f79f8b8036224f',
+//    From: 'whatsapp:+447931312860',
+//    ApiVersion: '2010-04-01'
+//  }
