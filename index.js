@@ -13,14 +13,13 @@ const client = require('twilio')(accountSid, authToken);
 
 //GET path used in localhost to serve an html with a text box to enter text to check response
 app.get("/test", function(req, res){
-  res.sendFile(__dirname + "/test.html")
+  res.sendFile(__dirname + "/test/test.html")
 })
 
 //POST to interpret user messages
 app.post("/incoming", function(req, res){
   console.log(req.body)
   const twiml = new MessagingResponse()
-  // var responseMessage =
   questionRouter.routeUserMessage(req.body, function(responseMessage){
     twiml.message(responseMessage)
     res.writeHead(200, {"Content-Type": "text/xml"})
