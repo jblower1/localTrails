@@ -12,10 +12,19 @@ var routeUserMessage = function(messageBody, callback){
   const phoneNumber = messageBody.From
   var gameInProgress = gameInstantiated(phoneNumber)
   if(!gameInProgress){
-    gameInProgress = addNewGame(phoneNumber)
+    //get game id from db and instantiate a new game in memory
+    getNewGameDetails(phoneNumber, function(error, rows){
+      gameInProgress = addNewGame(phoneNumber, rows[0].gameid, rows[0].teamid, rows[0].currentquestion)
+      console.log("New game. Message being routed.")
+      readMessage(message, gameInProgress, callback)
+    })
+  }else{
+    console.log("Game exists. Message being routed.")
+    readMessage(message, gameInProgress, callback)
   }
+}
 
-  console.log("Message being routed.")
+function readMessage(message, gameInProgress, callback){
   //Initiate conversation
   if(keywords.isRequestingWelcome(message)){
     console.log("welcome/rules requested")
@@ -39,6 +48,8 @@ var routeUserMessage = function(messageBody, callback){
     callback(gameInProgress.listeningMode(game.listeningModes.newQuestion))
   } else if(keywords.isRequestingRepeat(message)){
     callback(gameInProgress.currentQuestionText)
+  } else if(keywords.isGameEnd(message)){
+    gameInProgress.endGame(callback)
   }
   //answer if none of the above, do not accept an answer unless game is in play
   else if(gameInProgress.gameStarted){
@@ -47,9 +58,8 @@ var routeUserMessage = function(messageBody, callback){
     callback("Sorry, I'm not sure what you're trying to do.")
   }
 }
-
-function addNewGame(phoneNumber){
-  var newGame = new game.Game(phoneNumber)
+function addNewGame(phoneNumber, gameId, teamId, questionNumber){
+  var newGame = new game.Game(phoneNumber, gameId, teamId, questionNumber)
   instantiatedGames.push(newGame)
   return newGame
 }
@@ -57,6 +67,18 @@ function addNewGame(phoneNumber){
 function gameInstantiated(phoneNumber){
   return instantiatedGames.find(function(element){
     return element.phoneNumber === phoneNumber
+  })
+}
+
+function getNewGameDetails(phoneNumber, callback){
+  db.getGame(phoneNumber, callback)
+}
+
+function gameExists(phoneNumber, callback){
+  db.getInProgressGame(phoneNumber, function(error, rows){
+    if(rows[1]){
+
+    }
   })
 }
 

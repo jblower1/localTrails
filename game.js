@@ -1,5 +1,6 @@
 const db = require("./db/localTrailsDb")
 
+
 const listeningModes = {
     standard: "STANDARD",
     newQuestion: "NEWQUESTION"
@@ -7,10 +8,12 @@ const listeningModes = {
 module.exports.listeningModes = listeningModes
 
 module.exports.Game = class{
-    constructor(phoneNumber){
+    constructor(phoneNumber, gameId, teamId, questionNumber){
     //   this.gameId = gameId 
       this.phoneNumber = phoneNumber
-      this.questionNumber = 0
+      this.gameId = gameId
+      this.teamId = teamId
+      this.questionNumber = questionNumber
       this.gameStarted = false
       this.timesAnsweredIncorrect = 0
       this.listeningMode = listeningModes.standard
@@ -20,17 +23,23 @@ module.exports.Game = class{
     }
 
     startGame(callback){
-        this.endGame()
-        this.gameStarted = true
-        // console.log("Trail started")
-        this.nextQuestion()
-        this.getQuestionData(this.questionNumber, callback)
+        // this.endGame()
+        db.startGame(this.gameId, function(error, rowCount){
+            if(error){
+                callback(error)
+            }else if(rowCount > 0){
+                console.log("Trail started")
+                this.gameStarted = true
+                // this.nextQuestion()
+                this.getQuestionData(this.questionNumber, callback)    
+            }else if(rowCount === 0){
+                callback("I'm sorry, this game has already been completed.")
+            }
+        }.bind(this))
     }
 
     getQuestionData(questionId, callback){
         db.getQuestionText(questionId, function(error, rows){
-        //   console.log("Callback from DB...")
-        //   console.log(rows)
           callback(error, this.extractQuestion(rows))
         }.bind(this))
       }
@@ -45,13 +54,17 @@ module.exports.Game = class{
           this.currentQuestionText = ""
           this.currentAnswer = ""
           this.currentHint = ""
-          return "No remaining questions!"
+          return "No remaining questions! If you're ready to finish your experience, type \"end\"."
         }
       }
-    endGame(){
-        this.gameStarted = false
-        this.questionNumber = 0
-        // this.resetAnswers()
+    endGame(callback){
+        db.endGame(this.gameId, this.teamId, "COMPLETED", function(error, rowcount){
+            if(error){
+                callback(error)
+            }else if(rowcount > 0){
+                callback('Thanks for playing this local trail!')
+            }
+        })
     }
     
     resetAnswers(){
@@ -59,38 +72,68 @@ module.exports.Game = class{
     }
 
     isAnswerCorrect(userAnswer){
-        //TODO: determine if answers are correct for tracking persistency1
         return this.currentAnswer.toUpperCase() === userAnswer.toUpperCase()
     }
-    
-    nextQuestion(){
+    // nextQuestion(responseMessage){
+
+    // }
+    nextQuestion(callback){
+        this.timesAnsweredIncorrect = 0
         this.questionNumber = this.questionNumber + 1
+        db.setQuestion(this.gameId, this.teamId, this.questionNumber, callback)
     }
     gameInProgress(){
         return "A game is already in progress."
     }
     processAnswer(message, callback){
         if(this.isAnswerCorrect(message)){
-          this.nextQuestion()
-          this.getQuestionData(this.questionNumber, function(question){
-            callback(`Well done! ${message} was correct. \n\n ${question}`)
-          })
+        //   this.nextQuestion()
+            this.nextQuestion(function(error, rowcount){
+                if(!error){
+                    this.getQuestionData(this.questionNumber, function(error, question){
+                        if(error){
+                            callback(error)
+                        }else if(rowcount > 0){
+                            callback(`Well done! ${message} was correct.\n\n ${question}`)
+                        }
+                    })
+                }
+            }.bind(this))
         }
         else{
+          //TODO: write incorrect answer data to database (answers table)
           this.timesAnsweredIncorrect++
           callback("Bad luck! Try again")
         }
     }
-      
+
     skipAnswer(callback){
         console.log("Question skipped")
-        // setExpectingQuestion()
-        this.nextQuestion()
-        this.getQuestionData(this.questionNumber, function(question){
-          callback(`Question skipped. You can try this one again later. \n\n ${question}`)
-        })
+        this.nextQuestion(function(error, rowcount){
+            if(!error){
+                this.getQuestionData(this.questionNumber, function(error, question){
+                    if(error){
+                        callback(error)
+                    }else if(rowcount > 0){
+                        callback(`Question skipped. You can try this one again later. \n\n ${question}`)
+                    }
+                })
+            }
+        }.bind(this))
       }
-      
+    //TODO: Try to incorporate nextQuestionReply instead of anonymous function in process answer and skip answer
+    nextQuestionReply(error, rowcount, callback){
+            if(!error){
+                this.getQuestionData(this.questionNumber, function(error, question){
+                    if(error){
+                        callback(error)
+                    }else if(rowcount > 0){
+                        callback(`Question skipped. You can try this one again later. \n\n ${question}`)
+                    }
+                })
+            }
+        }        
+     
     getHint(){
         console.log("Getting hint")
         
@@ -163,3 +206,17 @@ module.exports.Game = class{
         return "Placeholder to return previous answers"
     }
   }
+
+// module.exports.Question = class Question{
+//     constructor(){
+//         this.questionText = ""
+//         this.questionNumber = ""
+//         this.correctAnswer = ""
+//         this.timesAnsweredIncorrect = 0
+//         this.points = 5
+//     }
+//     get questionText = function(){
+//         return this._questionText;
+//     }
+//     get questionNumber
+// }

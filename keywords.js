@@ -27,6 +27,10 @@ module.exports.isRequestingGameStart = function(message){
   return message === "start"
 }
 
-module.exports.sGameRestart = function(message){
+module.exports.isGameRestart = function(message){
   return message === "restart"
+}
+
+module.exports.isGameEnd = function(message){
+  return message === "end"
 }
