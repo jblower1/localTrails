@@ -1,5 +1,5 @@
 -- create tables
-create table questions if not exists (
+create table if not exists questions (
     questionid integer not null,
     questiontext varchar(500),
     answer varchar(50),
@@ -8,7 +8,7 @@ create table questions if not exists (
     primary key(trailid, questionid)
 );
 
-create table games if not exists(
+create table if not exists games(
     teamid integer not null,
     currentquestion integer,
     penaltypoints integer,
@@ -20,7 +20,7 @@ create table games if not exists(
     primary key(gameid, teamid, trailid)
 );
 
-create table players if not exists(
+create table if not exists players(
     playerid serial primary key,
     playerfirstname varchar(30),
     playersurname varchar(30),
@@ -28,21 +28,21 @@ create table players if not exists(
     teamid integer
 );
 
-create table answers if not exists(
+create table if not exists answers(
     teamid integer not null,
-    questionnumber not null,
+    questionnumber integer not null,
     providedanswer varchar(30),
     gameid integer not null,
     primary key(gameid,teamid,questionnumber)
 );
 
-create table rules if not exists(
+create table if not exists rules(
     ruleid varchar(20) not null primary key,
     ruledesc varchar(200) not null,
     ruleorder integer
 );
 
-create table teams if not exists(
+create table if not exists teams(
     teamid serial primary key, 
     teamname varchar(30)
 );
@@ -52,9 +52,8 @@ alter table players add constraint fk_teamid foreign key(teamid) references team
 
 alter table answers add constraint fk_teamid foreign key(teamid) references teams(teamid);
 
-alter table games 
-add constraint fk_teamid foreign key(teamid) references teams(teamid)
-add constraint fk_question foreign key(trailid, currentquestion) references questions(trailid, questionid);
+alter table games add constraint fk_teamid foreign key(teamid) references teams(teamid);
+alter table games add constraint fk_question foreign key(trailid, currentquestion) references questions(trailid, questionid);
 
 
 
