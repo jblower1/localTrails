@@ -23,7 +23,6 @@ module.exports.Game = class{
     }
 
     startGame(callback){
-        // this.endGame()
         db.startGame(this.gameId, function(error, rowCount){
             if(error){
                 callback(error)
@@ -58,18 +57,21 @@ module.exports.Game = class{
           return "No remaining questions! If you're ready to finish your experience, type \"end\"."
         }
       }
-    endGame(callback){
+    endGame(userInput, callback){
         db.endGame(this.gameId, this.teamId, "COMPLETED", function(error, rowcount){
             if(error){
                 callback(error)
+            }else if(rowcount > 0 && !userInput){
+                callback('Congratulations, you have completed the trail!')
             }else if(rowcount > 0){
-                callback('Thanks for playing this local trail!')
+                callback("You've ended the game.Thanks for playing this local trail")
             }
         })
     }
     
-    resetAnswers(){
+    resetAnswers(callback){
       // TODO: reset answers when they are persisted
+      callback("Sorry, resetting answers is not supported yet.")
     }
 
     isAnswerCorrect(userAnswer){
@@ -99,8 +101,11 @@ module.exports.Game = class{
                             callback(error)
                         }else if(rowcount > 0){
                             callback(`Well done! ${message} was correct.\n\n ${question}`)
+                        }else if(rowcount === 0){
+                            this.endGame(callback)
+                            // callback(`Well done! ${message} was correct.\n\n Congratulations you have finished the trail!`)
                         }
-                    })
+                    }.bind(this))
                 }
             }.bind(this))
         }
@@ -141,7 +146,7 @@ module.exports.Game = class{
      
     getHint(){
         console.log("Getting hint")
-        
+        callback("Sorry, hints are not supported yet.")
     }
       
     getGameRules(callback){
