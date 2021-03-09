@@ -10,7 +10,7 @@ client.connect()
 
 module.exports.getRules = function(callback){
   console.log("Getting rules from db")
-  client.query('SELECT ruledesc FROM rules ORDER BY rule_order ASC', function(err, res){
+  client.query('SELECT ruledesc FROM rules ORDER BY ruleorder ASC', function(err, res){
     if(err){
       // console.log(err)
       // client.end()
