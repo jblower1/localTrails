@@ -10,3 +10,8 @@ If the database needs to be redeployed, the following command rebuilds the table
 ```sql
 heroku pg:psql -f db/createDatabase.sql
 ```
+
+## Deploy App to Heroku
+```
+git push heroku master
+```
