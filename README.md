@@ -7,7 +7,7 @@ Multiple consecutive games required to be possible.
 
 ## Deploy New Blank Database
 If the database needs to be redeployed, the following command rebuilds the tables and foreign key dependencies.
-```sql
+```
 heroku pg:psql -f db/createDatabase.sql
 ```
 
