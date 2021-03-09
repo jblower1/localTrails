@@ -4,7 +4,8 @@
   "description": "Local Trails Mock Chatbot",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "db_deploy_local": "psql -h localhost -U lt_admin -d localtrails_dev -a -f db/createDatabase.sql"
   },
   "author": "",
   "license": "ISC",
