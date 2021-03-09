@@ -53,6 +53,7 @@ function readMessage(message, gameInProgress, callback){
   }
   //answer if none of the above, do not accept an answer unless game is in play
   else if(gameInProgress.gameStarted){
+    console.log("Message interpreted as an answer")
     gameInProgress.processAnswer(message, callback)
   }else{
     callback("Sorry, I'm not sure what you're trying to do.")
