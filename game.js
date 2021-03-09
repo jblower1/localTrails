@@ -39,6 +39,7 @@ module.exports.Game = class{
     }
 
     getQuestionData(questionId, callback){
+        console.log("About to get question")
         db.getQuestionText(questionId, function(error, rows){
           callback(error, this.extractQuestion(rows))
         }.bind(this))
@@ -78,6 +79,7 @@ module.exports.Game = class{
 
     // }
     nextQuestion(callback){
+        console.log("Setting next question")
         this.timesAnsweredIncorrect = 0
         this.questionNumber = this.questionNumber + 1
         db.setQuestion(this.gameId, this.teamId, this.questionNumber, callback)
@@ -86,8 +88,10 @@ module.exports.Game = class{
         return "A game is already in progress."
     }
     processAnswer(message, callback){
+        console.log("Processing Answer: " + message)
         if(this.isAnswerCorrect(message)){
         //   this.nextQuestion()
+            console.log("Correct Answer")
             this.nextQuestion(function(error, rowcount){
                 if(!error){
                     this.getQuestionData(this.questionNumber, function(error, question){
@@ -102,6 +106,7 @@ module.exports.Game = class{
         }
         else{
           //TODO: write incorrect answer data to database (answers table)
+          console.log("Incorrect Answer")
           this.timesAnsweredIncorrect++
           callback("Bad luck! Try again")
         }

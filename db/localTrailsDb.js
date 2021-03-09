@@ -24,6 +24,7 @@ module.exports.getRules = function(callback){
 }
 
 module.exports.getQuestionText = function(questionId, callback){
+  console.log("Querying database for next question")
   // console.log("Getting question")
   client.query('SELECT questiontext, answer, hint FROM questions WHERE questionid = $1', [questionId], function(err, res){
     if(err){
