@@ -41,14 +41,19 @@ function readMessage(message, gameInProgress, callback){
     console.log("Previous answers requested")
     callback(gameInProgress.answers)
   } else if(keywords.isRequestingSkip(message)){
+    console.log("Skip requested")
     gameInProgress.skipAnswer(callback) //TODO: rework skipanswer
   } else if(keywords.isRequestingHint(message)){
+    console.log("Hint requested")
     callback(gameInProgress.currentHint())
   } else if(keywords.isRequestingChange(message)){
+    console.log("Change question requested")
     callback(gameInProgress.listeningMode(game.listeningModes.newQuestion))
   } else if(keywords.isRequestingRepeat(message)){
+    console.log("Repeat question")
     callback(gameInProgress.currentQuestionText)
   } else if(keywords.isGameEnd(message)){
+    console.log("End game")
     gameInProgress.endGame(callback)
   }
   //answer if none of the above, do not accept an answer unless game is in play
@@ -56,6 +61,7 @@ function readMessage(message, gameInProgress, callback){
     console.log("Message interpreted as an answer")
     gameInProgress.processAnswer(message, callback)
   }else{
+    console.log("Message not understood")
     callback("Sorry, I'm not sure what you're trying to do.")
   }
 }
