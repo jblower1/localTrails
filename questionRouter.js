@@ -12,10 +12,26 @@ var routeUserMessage = function(messageBody, callback){
   const phoneNumber = messageBody.From
   var gameInProgress = gameInstantiated(phoneNumber)
   if(!gameInProgress){
-    //get game id from db and instantiate a new game in memory
-    getNewGameDetails(phoneNumber, function(error, rows){
-      gameInProgress = addNewGame(phoneNumber, rows[0].gameid, rows[0].teamid, rows[0].currentquestion)
-      console.log("New game. Message being routed.")
+    //get game id from db and instantiate a game in memory
+    getNewGameDetails(phoneNumber, function(error, rows, max){
+      gameInProgress = addNewGame({
+        phoneNumber: phoneNumber,
+        gameId: rows[0].gameid,
+        teamId: rows[0].teamid,
+        questionNumber: rows[0].currentquestion,
+        questionText: rows[0].questiontext,
+        answer: rows[0].answer,
+        status: rows[0].status,
+        lastQuestion: max
+      })
+      //   phoneNumber, 
+      //   rows[0].gameid, 
+      //   rows[0].teamid, 
+      //   rows[0].currentquestion,
+      //   rows[0].status,
+      //   max
+      // )
+      console.log("Reinstantiated game. Message being routed.")
       readMessage(message, gameInProgress, callback)
     })
   }else{
@@ -54,7 +70,7 @@ function readMessage(message, gameInProgress, callback){
     callback(gameInProgress.currentQuestionText)
   } else if(keywords.isGameEnd(message)){
     console.log("End game")
-    gameInProgress.endGame(callback)
+    gameInProgress.endGame(true, callback)
   }
   //answer if none of the above, do not accept an answer unless game is in play
   else if(gameInProgress.gameStarted){
@@ -65,8 +81,14 @@ function readMessage(message, gameInProgress, callback){
     callback("Sorry, I'm not sure what you're trying to do.")
   }
 }
-function addNewGame(phoneNumber, gameId, teamId, questionNumber){
-  var newGame = new game.Game(phoneNumber, gameId, teamId, questionNumber)
+// function addNewGame(phoneNumber, gameId, teamId, questionNumber, status, maxQuestion){
+//   var newGame = new game.Game(phoneNumber, gameId, teamId, questionNumber, status, maxQuestion)
+//   instantiatedGames.push(newGame)
+//   return newGame
+// }
+
+function addNewGame(properties){
+  var newGame = new game.Game(properties)
   instantiatedGames.push(newGame)
   return newGame
 }
@@ -78,7 +100,19 @@ function gameInstantiated(phoneNumber){
 }
 
 function getNewGameDetails(phoneNumber, callback){
-  db.getGame(phoneNumber, callback)
+  db.getGame(phoneNumber, function(error, rows){
+    if(error){
+      callback(error)
+    }else{
+      db.getMaxQuestionNumber(rows[0].trailid, function(error, max){
+        if(error){
+          callback(error)
+        }else{
+          callback(null, rows, max)
+        }
+      })
+    }
+  })
 }
 
 function gameExists(phoneNumber, callback){

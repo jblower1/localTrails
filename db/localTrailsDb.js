@@ -58,13 +58,18 @@ module.exports.getInProgressGame = function(phoneNumber, callback){
   })
 }
 
+module.exports.getMaxQuestionNumber = function(trailId, callback){
+  client.query("SELECT max(questionid) FROM questions where trailid = $1", [trailId], function(err, res){
+    if(err){
+      callback(new Error("Could not identify a last question of this trail."))
+    }else if(res){
+      callback(null, res.rows[0].max)
+    }
+  })
+}
+
 module.exports.getGame = function(phoneNumber, callback){
-  // client.query('select games.gameid, ' +
-  //               'players.teamid ' + 
-  //               'from players inner join games' + 
-  //               'on players.teamid = games.teamid' + 
-  //               'where players.phonenumber = $1', [phoneNumber], function(err, res){
-  client.query('select games.gameid, games.currentquestion, players.teamid from players inner join games on players.teamid = games.teamid where players.phonenumber = $1', [phoneNumber], function(err, res){
+  client.query('select games.gameid, games.currentquestion, games.status, games.trailid, players.teamid, questions.questiontext, questions.answer from players inner join games on players.teamid = games.teamid inner join questions on games.currentquestion = questions.questionid  where players.phonenumber = $1', [phoneNumber], function(err, res){
     if(err){
       callback(new Error("Sorry, there was a problem reading from the database"))
     }else if(res){

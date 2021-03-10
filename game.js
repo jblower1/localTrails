@@ -8,18 +8,33 @@ const listeningModes = {
 module.exports.listeningModes = listeningModes
 
 module.exports.Game = class{
-    constructor(phoneNumber, gameId, teamId, questionNumber){
-    //   this.gameId = gameId 
-      this.phoneNumber = phoneNumber
-      this.gameId = gameId
-      this.teamId = teamId
-      this.questionNumber = questionNumber
-      this.gameStarted = false
-      this.timesAnsweredIncorrect = 0
-      this.listeningMode = listeningModes.standard
-      this.currentQuestionText = ""
-      this.currentHint = ""
-      this.currentAnswer = ""
+    // constructor(phoneNumber, gameId, teamId, questionNumber, status, max){
+    //   this.phoneNumber = phoneNumber
+    //   this.gameId = gameId
+    //   this.teamId = teamId
+    //   this.questionNumber = questionNumber
+    //   this.gameStarted = status === 'IN_PROGRESS' 
+    //   this.timesAnsweredIncorrect = 0
+    //   this.listeningMode = listeningModes.standard
+    //   this.questionText = ""
+    //   this.hint = ""
+    //   this.answer = ""
+    //   this.lastQuestion = max
+    // }
+    constructor(properties){
+        ({
+            phoneNumber: this.phoneNumber,
+            gameId: this.gameId,
+            teamId: this.teamId,
+            questionNumber: this.questionNumber,
+            questionText: this.questionText,
+            answer: this.answer,
+            hint: this.hint,
+            lastQuestion: this.lastQuestion
+        } = properties)
+        this.gameStarted = properties.status === 'IN_PROGRESS' 
+        this.listeningMode = listeningModes.standard
+        this.timesAnsweredIncorrect = 0
     }
 
     startGame(callback){
@@ -46,14 +61,14 @@ module.exports.Game = class{
       
     extractQuestion(rows){
         if(rows[0].questiontext){
-          this.currentQuestionText = rows[0].questiontext
-          this.currentAnswer = rows[0].answer
-          this.currentHint = rows[0].hint
-          return this.currentQuestionText
+          this.questionText = rows[0].questiontext
+          this.answer = rows[0].answer
+          this.hint = rows[0].hint
+          return this.questionText
         }else{
-          this.currentQuestionText = ""
-          this.currentAnswer = ""
-          this.currentHint = ""
+          this.questionText = ""
+          this.answer = ""
+          this.hint = ""
           return "No remaining questions! If you're ready to finish your experience, type \"end\"."
         }
       }
@@ -63,7 +78,7 @@ module.exports.Game = class{
                 callback(error)
             }else if(rowcount > 0 && !userInput){
                 callback('Congratulations, you have completed the trail!')
-            }else if(rowcount > 0){
+            }else if(rowcount > 0 && userInput){
                 callback("You've ended the game.Thanks for playing this local trail")
             }
         })
@@ -75,7 +90,7 @@ module.exports.Game = class{
     }
 
     isAnswerCorrect(userAnswer){
-        return this.currentAnswer.toUpperCase() === userAnswer.toUpperCase()
+        return this.answer.toUpperCase() === userAnswer.toUpperCase()
     }
     // nextQuestion(responseMessage){
 
@@ -94,26 +109,27 @@ module.exports.Game = class{
         if(this.isAnswerCorrect(message)){
         //   this.nextQuestion()
             console.log("Correct Answer")
-            this.nextQuestion(function(error, rowcount){
-                if(!error){
-                    this.getQuestionData(this.questionNumber, function(error, question){
-                        if(error){
-                            callback(error)
-                        }else if(rowcount > 0){
-                            callback(`Well done! ${message} was correct.\n\n ${question}`)
-                        }else if(rowcount === 0){
-                            this.endGame(callback)
-                            // callback(`Well done! ${message} was correct.\n\n Congratulations you have finished the trail!`)
-                        }
-                    }.bind(this))
-                }
-            }.bind(this))
+            if(this.lastQuestion === this.questionNumber){
+                this.endGame(null, callback)
+            }else{
+                this.nextQuestion(function(error, rowcount){
+                    if(!error){
+                        this.getQuestionData(this.questionNumber, function(error, question){
+                            if(error){
+                                callback(error)
+                            }else if(rowcount > 0){
+                                callback(`Well done! ${message} was correct.\n\n ${question}`)
+                            }
+                        })
+                    }
+                }.bind(this))
+            }
         }
         else{
           //TODO: write incorrect answer data to database (answers table)
           console.log("Incorrect Answer")
           this.timesAnsweredIncorrect++
-          callback("Bad luck! Try again")
+          callback(null, "Bad luck! Try again")
         }
     }
 
@@ -192,24 +208,24 @@ module.exports.Game = class{
     set listeningMode(listeningMode){
         this._listeningMode = listeningMode
     }
-    get currentQuestionText(){
-        return this._currentQuestionText
+    get questionText(){
+        return this._questionText
     }
-    set currentQuestionText(currentQuestionText){
-        this._currentQuestionText = currentQuestionText
+    set questionText(questionText){
+        this._questionText = questionText
     }
-    get currentHint(){
-        return this._currentHint ? this._currentHint : "This question does not currently have a hint"
+    get hint(){
+        return this._hint ? this.hint : "This question does not currently have a hint"
         // return this._currentHint
     }
-    set currentHint(currentHint){
-        this._currentHint = currentHint
+    set hint(hint){
+        this._hint = hint
     }
-    get currentAnswer(){
-        return this._currentAnswer
+    get answer(){
+        return this._answer
     }
-    set currentAnswer(currentAnswer){
-        this._currentAnswer = currentAnswer
+    set answer(answer){
+        this._answer = answer
     }
     get answers(){
         //TODO: Implement logic for this
