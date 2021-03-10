@@ -8,19 +8,6 @@ const listeningModes = {
 module.exports.listeningModes = listeningModes
 
 module.exports.Game = class{
-    // constructor(phoneNumber, gameId, teamId, questionNumber, status, max){
-    //   this.phoneNumber = phoneNumber
-    //   this.gameId = gameId
-    //   this.teamId = teamId
-    //   this.questionNumber = questionNumber
-    //   this.gameStarted = status === 'IN_PROGRESS' 
-    //   this.timesAnsweredIncorrect = 0
-    //   this.listeningMode = listeningModes.standard
-    //   this.questionText = ""
-    //   this.hint = ""
-    //   this.answer = ""
-    //   this.lastQuestion = max
-    // }
     constructor(properties){
         ({
             phoneNumber: this.phoneNumber,
