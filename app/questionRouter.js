@@ -1,6 +1,6 @@
-const messages = require("./messages")
+// const messages = require("./messages")
 // const rules = require("./rules")
-const db = require("./db/localTrailsDb")
+const db = require("../db/localTrailsDb")
 const keywords = require("./keywords")
 const game = require("./game")
 
@@ -60,7 +60,7 @@ function readMessage(message, gameInProgress, callback){
     callback(gameInProgress.listeningMode(game.listeningModes.newQuestion))
   } else if(keywords.isRequestingRepeat(message)){
     console.log("Repeat question")
-    callback(gameInProgress.currentQuestionText)
+    callback(gameInProgress.questionText)
   } else if(keywords.isGameEnd(message)){
     console.log("End game")
     gameInProgress.endGame(true, callback)
@@ -99,14 +99,6 @@ function getNewGameDetails(phoneNumber, callback){
           callback(null, rows, max)
         }
       })
-    }
-  })
-}
-
-function gameExists(phoneNumber, callback){
-  db.getInProgressGame(phoneNumber, function(error, rows){
-    if(rows[1]){
-
     }
   })
 }

@@ -1,4 +1,4 @@
-const db = require("./db/localTrailsDb");
+const db = require("../db/localTrailsDb");
 
 const listeningModes = {
   standard: "STANDARD",

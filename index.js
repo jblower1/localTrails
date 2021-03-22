@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require("express")
 const bodyParser  = require("body-parser")
-const questionRouter = require("./questionRouter")
+const questionRouter = require("./app/questionRouter")
 const MessagingResponse = require("twilio").twiml.MessagingResponse
 
 var app = express()
@@ -39,16 +39,16 @@ app.listen(port, function(){
 })
 
 // console.log("Test message being sent...")
-function testMessage(){
-  client.messages
-        .create({
-           body: 'Test Message from Node',
-           from: 'whatsapp:+14155238886',
-           to: 'whatsapp:+447931312860'
-         })
-        .then(message => console.log(message.sid))
-        .done();
-}
+// function testMessage(){
+//   client.messages
+//         .create({
+//            body: 'Test Message from Node',
+//            from: 'whatsapp:+14155238886',
+//            to: 'whatsapp:+447931312860'
+//          })
+//         .then(message => console.log(message.sid))
+//         .done();
+// }
 
 
 // {

@@ -1,5 +1,5 @@
 const { Client } = require('pg')
-const { ModelBuildPage } = require('twilio/lib/rest/autopilot/v1/assistant/modelBuild')
+// const { ModelBuildPage } = require('twilio/lib/rest/autopilot/v1/assistant/modelBuild')
 const client = new Client({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
