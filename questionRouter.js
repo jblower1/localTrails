@@ -24,13 +24,6 @@ var routeUserMessage = function(messageBody, callback){
         status: rows[0].status,
         lastQuestion: max
       })
-      //   phoneNumber, 
-      //   rows[0].gameid, 
-      //   rows[0].teamid, 
-      //   rows[0].currentquestion,
-      //   rows[0].status,
-      //   max
-      // )
       console.log("Reinstantiated game. Message being routed.")
       readMessage(message, gameInProgress, callback)
     })
@@ -61,7 +54,7 @@ function readMessage(message, gameInProgress, callback){
     gameInProgress.skipAnswer(callback) //TODO: rework skipanswer
   } else if(keywords.isRequestingHint(message)){
     console.log("Hint requested")
-    callback(gameInProgress.currentHint())
+    callback(gameInProgress.hint())
   } else if(keywords.isRequestingChange(message)){
     console.log("Change question requested")
     callback(gameInProgress.listeningMode(game.listeningModes.newQuestion))
@@ -81,11 +74,6 @@ function readMessage(message, gameInProgress, callback){
     callback("Sorry, I'm not sure what you're trying to do.")
   }
 }
-// function addNewGame(phoneNumber, gameId, teamId, questionNumber, status, maxQuestion){
-//   var newGame = new game.Game(phoneNumber, gameId, teamId, questionNumber, status, maxQuestion)
-//   instantiatedGames.push(newGame)
-//   return newGame
-// }
 
 function addNewGame(properties){
   var newGame = new game.Game(properties)

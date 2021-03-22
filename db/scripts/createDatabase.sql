@@ -5,6 +5,7 @@ create table if not exists questions (
     answer varchar(50),
     hint varchar(500),
     trailid integer not null,
+    nextdirection varchar(500),
     primary key(trailid, questionid)
 );
 

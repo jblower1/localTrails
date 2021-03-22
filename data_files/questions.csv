@@ -1,16 +1,18 @@
-questionid,questiontext,answer,hint,trailid
-0,Game not started,,,1
-1,How many vikings are guarding the bridge over the river? (please enter as a number),12,,1
-2,What are the prickly customers on the fence at 43 Penwith Road?,Hedgehogs,,1
-3,What vehicles shouldn't use Revelstoke Road?,HGVs,,1
-4,What number is McCluskey's?,200,,1
-5,What number is the bridge?,D240,,1
-6,How many trees are there near lamppost 17?,8,,1
-7,How many men are keeping watch on the water?,2,,1
-8,What year is it estimated that the Dam was built?,1765,,1
-9,What mode of transport if prohibited on this path?,Cycling,,1
-10,Who provided the benches?,Transport for London,,1
-11,What year did a Pope land in this park by Helicopter?,1982,,1
-12,"Fill in what is missing: Chaffinch, Elm, Bluecap, Ash, Hawthorn,...?",Oak,,1
-13,What Ofsted grading does the Montessori School have?,Outstanding,,1
-14,What is the type of flower on the chocolate shop?,Rose,,1
+questionid,questiontext,answer,hint,trailid,nextdirection
+0,"Game not started",,,1,"You should now be in the starting position outside the Wandle Pub (SW18 4EJ), head up Penwith Road until you can answer this question"
+1,"How many vikings are guarding the bridge over the river? (please enter as a number)""",12,,1,"Head up Penwith Road until you can answer the next question.
+
+Did you know that during WW2 several bombs were dropped on Penwith Road leading to a number of the houses needing to be rebuilt? Thats why some of the houses look different."
+2,"What are the prickly customers on the fence at 43 Penwith Road?",Hedgehogs,,1,"Continue up Penwith Road to the Pig and Whistle pub, cross the road and to Revelstoke Road. Make sure to use the designated crossing."
+3,"What vehicles shouldn't use Revelstoke Road?",HGVs,,1,"Continue up Revelstoke Road until you can answer this question (hint - near McCluskey’s)"
+4,"What number is McCluskey's?",200,,1,"As you head into the park keep an eye out"
+5,"What number is the bridge?",D240,,1,"Go through the park and head towards the lake."
+6,"How many trees are there near lamppost 17?",8,,1,"Carry on up the park to the lake. Careful on this next question...it's going to take some thinking"
+7,"How many men are keeping watch on the water?",2,,1,"Looking at the Pond, head right to the end (NNW). Did you know that where you are standing is actually a dam for the lake…"
+8,"What year is it estimated that the Dam was built?",1765,,1,"Follow the path away from the lake and head left along the athletics/cricket field"
+9,"What mode of transport if prohibited on this path?",Cycling,,1,"Continue following the path, heading towards Wimbledon Park entrance."
+10,"Who provided the benches?",Transport for London,,1,"Continue up to the Wimbledon park entrance and follow the path round right, ensuring that you remain within the Park. Continue until you can answer this question. If you found out when the Dam was built, this one should be easy"
+11,"What year did a Pope land in this park by Helicopter?",1982,,1,"Continue round the path until you can answer this question about Horse Close Wood"
+12,"Fill in what is missing: Chaffinch, Elm, Bluecap, Ash, Hawthorn,...?",Oak,,1,"Head back to the entrance of Wimbledon park and back down Revelstoke Road"
+13,"What Ofsted grading does the Montessori School have?",Outstanding,,1,"Staying on Revelstoke Road. Once you have answered this one, you're done!"
+14,"What is the type of flower on the chocolate shop?",Rose,,1,"No more directions...You've made it to the end."

@@ -26,7 +26,11 @@ module.exports.getRules = function(callback){
 module.exports.getQuestionText = function(questionId, callback){
   console.log("Querying database for next question")
   // console.log("Getting question")
-  client.query('SELECT questiontext, answer, hint FROM questions WHERE questionid = $1', [questionId], function(err, res){
+  client.query('SELECT questiontext, ' +
+               'answer, ' +
+               'hint, ' + 
+               'nextdirection ' + 
+               'FROM questions WHERE questionid = $1', [questionId], function(err, res){
     if(err){
       // console.log(err)
       // client.end()
@@ -69,7 +73,16 @@ module.exports.getMaxQuestionNumber = function(trailId, callback){
 }
 
 module.exports.getGame = function(phoneNumber, callback){
-  client.query('select games.gameid, games.currentquestion, games.status, games.trailid, players.teamid, questions.questiontext, questions.answer from players inner join games on players.teamid = games.teamid inner join questions on games.currentquestion = questions.questionid  where players.phonenumber = $1', [phoneNumber], function(err, res){
+  client.query('select games.gameid, ' + 
+               'games.currentquestion, ' + 
+               'games.status, ' +
+               'games.trailid, ' +
+               'players.teamid, ' +
+               'questions.questiontext, ' +
+               'questions.answer ' + 
+               'from players inner join games on players.teamid = games.teamid ' +
+               'inner join questions on games.currentquestion = questions.questionid  ' +
+               'where players.phonenumber = $1', [phoneNumber], function(err, res){
     if(err){
       callback(new Error("Sorry, there was a problem reading from the database"))
     }else if(res){
