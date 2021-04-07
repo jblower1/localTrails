@@ -22,7 +22,10 @@ var routeUserMessage = function(messageBody, callback){
         questionText: rows[0].questiontext,
         answer: rows[0].answer,
         status: rows[0].status,
-        lastQuestion: max
+        lastQuestion: max,
+        answerPoints: rows[0].answerpoints,
+        penaltyPoints: rows[0].penaltypoints,
+        duration: rows[0].duration
       })
       console.log("Reinstantiated game. Message being routed.")
       readMessage(message, gameInProgress, callback)
@@ -64,6 +67,9 @@ function readMessage(message, gameInProgress, callback){
   } else if(keywords.isGameEnd(message)){
     console.log("End game")
     gameInProgress.endGame(true, callback)
+  } else if(keywords.isGamePause(message)){
+    console.log("Pause Game");
+    gameInProgress.pauseGame(callback);
   }
   //answer if none of the above, do not accept an answer unless game is in play
   else if(gameInProgress.gameStarted){

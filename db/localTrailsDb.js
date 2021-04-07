@@ -77,6 +77,9 @@ module.exports.getGame = function(phoneNumber, callback){
                'games.currentquestion, ' + 
                'games.status, ' +
                'games.trailid, ' +
+               'games.penaltypoints,' +
+               'games.answerpoints,' +
+               'games.duration,' +
                'players.teamid, ' +
                'questions.questiontext, ' +
                'questions.answer ' + 
@@ -101,8 +104,8 @@ module.exports.startGame = function(gameId, callback){
   })
 }
 
-module.exports.setQuestion = function(gameId, teamId, question, callback){
-  client.query('update games set currentquestion = $1 where gameid = $2 and teamid = $3', [question, gameId, teamId], function(err, res){
+module.exports.setQuestion = function(gameId, teamId, question, answerPoints, penaltyPoints, callback){
+  client.query('update games set currentquestion = $1, answerpoints = $4, penaltypoints = $5 where gameid = $2 and teamid = $3', [question, gameId, teamId, answerPoints, penaltyPoints], function(err, res){
     if(err){
       callback(new Error('There was a problem saving the question data.'))
     }else if(res){
@@ -111,18 +114,14 @@ module.exports.setQuestion = function(gameId, teamId, question, callback){
   })
 }
 
-module.exports.endGame = function(gameId, teamId, status, callback){
-  client.query('update games set status = $1 where gameid = $2 and teamid = $3', [status, gameId, teamId], function(err, res){
+module.exports.endGame = function(gameId, teamId, status, duration, answerPoints, penaltyPoints, callback){
+  client.query('update games set status = $1, duration = $4, answerpoints = $5, penaltypoints = $6 where gameid = $2 and teamid = $3', [status, gameId, teamId, duration, answerPoints, penaltyPoints], function(err, res){
     if(err){
       callback(new Error('There was a problem ending this game.'))
     }else if(res){
       callback(null, res.rowCount)
     }
   })
-}
-
-module.exports.pauseGame = function(){
-
 }
 
 module.exports.saveGame = function(){

@@ -31,6 +31,10 @@ module.exports.isGameRestart = function(message){
   return message === "restart"
 }
 
+module.exports.isGamePause = function(message){
+  return message === "pause";
+}
+
 module.exports.isGameEnd = function(message){
   return message === "end"
 }

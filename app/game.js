@@ -4,6 +4,11 @@ const listeningModes = {
   standard: "STANDARD",
   newQuestion: "NEWQUESTION",
 };
+
+const points = {
+  correct: 10,
+  incorrect: 2
+};
 module.exports.listeningModes = listeningModes;
 
 module.exports.Game = class {
@@ -17,10 +22,14 @@ module.exports.Game = class {
       answer: this.answer,
       hint: this.hint,
       lastQuestion: this.lastQuestion,
+      answerPoints: this.answerPoints,
+      penaltyPoints: this.penaltyPoints,
+      duration: this.duration
     } = properties);
     this.gameStarted = properties.status === "IN_PROGRESS";
     this.listeningMode = listeningModes.standard;
-    this.timesAnsweredIncorrect = 0;
+    //log time started
+    this.sessionStartTime = new Date();
   }
   /**
    * Start the game
@@ -74,17 +83,22 @@ module.exports.Game = class {
     }
   }
   endGame(userInput, callback) {
+    this.sessionEndTime = new Date();
+    this.calculateGameSeconds();
     db.endGame(
       this.gameId,
       this.teamId,
       "COMPLETED",
+      this.duration,
+      this.answerPoints,
+      this.penaltyPoints,
       function (error, rowcount) {
         if (error) {
           callback(error);
         } else if (rowcount > 0 && !userInput) {
           callback("Congratulations, you have completed the trail!");
         } else if (rowcount > 0 && userInput) {
-          callback("You've ended the game.Thanks for playing this local trail");
+          callback("You've ended the game early.Thanks for playing this local trail");
         }
       }
     );
@@ -105,7 +119,7 @@ module.exports.Game = class {
     console.log("Setting next question");
     this.timesAnsweredIncorrect = 0;
     this.questionNumber = this.questionNumber + 1;
-    db.setQuestion(this.gameId, this.teamId, this.questionNumber, callback);
+    db.setQuestion(this.gameId, this.teamId, this.questionNumber, this.answerPoints, this.penaltyPoints, callback);
   }
   gameInProgress() {
     return "A game is already in progress.";
@@ -115,6 +129,7 @@ module.exports.Game = class {
     if (this.isAnswerCorrect(message)) {
       //   this.nextQuestion()
       console.log("Correct Answer");
+      this.answerPoints += points.correct;
       if (this.lastQuestion === this.questionNumber) {
         this.endGame(null, callback);
       } else {
@@ -140,9 +155,29 @@ module.exports.Game = class {
     } else {
       //TODO: write incorrect answer data to database (answers table)
       console.log("Incorrect Answer");
+      this.penaltyPoints += points.incorrect;
       this.timesAnsweredIncorrect++;
+      //add points to removed 
       callback(null, "Bad luck! Try again");
     }
+  }
+
+  pauseGame(callback){
+    db.endGame(
+      this.gameId,
+      this.teamId,
+      "PAUSED",
+      this.duration,
+      this.answerPoints,
+      this.penaltyPoints,
+      function (error, rowcount) {
+        if (error) {
+          callback(error);
+        } else if (rowcount > 0) {
+          callback("Game Paused. The game time has stopped until you interact with this chat again.");
+        }
+      }
+    );
   }
 
   skipAnswer(callback) {
@@ -198,6 +233,14 @@ module.exports.Game = class {
     }, "");
   }
 
+  sessionDurationSeconds(){
+    let ms = this.sessionEndTime.getTime() - this.sessionStartTime.getTime();
+    return Math.round(ms/1000);
+  }
+
+  calculateGameSeconds(){
+    this.duration += this.sessionDurationSeconds();
+  }
   get phoneNumber() {
     return this._phoneNumber;
   }
@@ -252,6 +295,36 @@ module.exports.Game = class {
   get answers() {
     //TODO: Implement logic for this
     return "Placeholder to return previous answers";
+  }
+  get answerPoints(){
+    return this._answerPoints;
+  }
+  set answerPoints(points){
+    this._answerPoints = points;
+  }
+  addAnswerPoints(points){
+    this.answerPoints = this.answerPoints() + points;
+  }
+  get penaltyPoints(){
+    return this._penaltyPoints;
+  }
+  set penaltyPoints(points){
+    this._penaltyPoints = points;
+  }
+  addpenaltyPoints(points){
+    this.penaltyPoints = this.penaltyPoints() + points;
+  }
+  get sessionStartTime(){
+    return this._sessionStartTime;
+  }
+  set sessionStartTime(date){
+    this._sessionStartTime = date;
+  }
+  get sessionEndTime(){
+    return this._sessionEndTime;
+  }
+  set sessionEndTime(date){
+    this._sessionEndTime = date;
   }
 };
 

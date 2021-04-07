@@ -15,3 +15,7 @@ heroku pg:psql -f db/createDatabase.sql
 ```
 git push heroku master
 ```
+
+## Game Rules
+### Scoring
+Each game has a number of points attributed to it. Each question can provide a number of points and each incorrect answer will reduce the points received from the total number of points.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
