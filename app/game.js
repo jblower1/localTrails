@@ -5,6 +5,13 @@ const listeningModes = {
   newQuestion: "NEWQUESTION",
 };
 
+const statuses = {
+  IN_PROGRESS: {value: "IN_PROGRESS", text: "Game is currently in progress. Type Pause to pause game."},
+  NOT_STARTED: {value: "NOT_STARTED", text: "Game is currently not started. Type Start."},
+  PAUSED: {value: "PAUSED", text: "Game is currently paused. Type Start to resume"},
+  COMPLETED: {value: "COMPLETED", text: "Game is completed. Thank you for playing!"}
+};
+
 const points = {
   correct: 10,
   incorrect: 2
@@ -24,36 +31,87 @@ module.exports.Game = class {
       lastQuestion: this.lastQuestion,
       answerPoints: this.answerPoints,
       penaltyPoints: this.penaltyPoints,
-      duration: this.duration
+      duration: this.duration,
+      status: this.status
     } = properties);
-    this.gameStarted = properties.status === "IN_PROGRESS";
+    this.gameStarted = properties.status === statuses.IN_PROGRESS.value;
     this.listeningMode = listeningModes.standard;
     //log time started
-    this.sessionStartTime = new Date();
+     //THIS IS STARTED TOO EARLY. NEEDS TO BE SET IF GAME IS IN_PRGRESS. OTHERWISE ONLY IF START IS CALLED. 
+  }
+
+  welcomeMessage(callback){
+    if(this.status === statuses.IN_PROGRESS.value){
+      return callback(this.questionText);
+    }else if(this.status === statuses.NOT_STARTED.value){
+      return this.getGameRules(callback);
+    }else if(this.status === statuses.PAUSED.value){
+      return callback("Game is paused. Type \"start\" to resume");
+    }else if(this.status === statuses.COMPLETED.value){
+      return callback("You have already completed your game. Thanks for playing.");
+    }
   }
   /**
-   * Start the game
+   * Start the game or resume the game from paused
    * @param {function} callback do the callback 
    */
   startGame(callback) {
-    db.startGame(
-      this.gameId,
-      function (error, rowCount) {
-        if (error) {
-          callback(error);
-        } else if (rowCount > 0) {
-          console.log("Trail started");
-          this.gameStarted = true;
-          // this.nextQuestion()
-          this.getQuestionData(this.questionNumber, callback);
-        } else if (rowCount === 0) {
-          callback("I'm sorry, this game has already been completed.");
-        }
-      }.bind(this)
-    );
+    if(!this.isInProgress){
+      db.startGame(
+        this.gameId,
+        function (error, rowCount) {
+          if (error) {
+            callback(error);
+          } else if (rowCount > 0) {
+            console.log("Trail started");
+            this.sessionStartTime = new Date();
+            this.status = statuses.IN_PROGRESS.value;
+            this.getQuestionData(this.questionNumber, callback);
+          } else if (rowCount === 0) {
+            callback("I'm sorry, this game has already been completed.");
+          }
+        }.bind(this)
+      );
+    }else{
+      callback(this.gameInProgress());
+    }
+  }
+  processAnswer(message, callback) {
+    console.log("Processing Answer: " + message);
+    if (this.isAnswerCorrect(message)) {
+      //   this.nextQuestion()
+      console.log("Correct Answer");
+      this.answerPoints += points.correct;
+      if (this.lastQuestion === this.questionNumber) {
+        this.endGame(null, callback);
+      } else {
+        this.nextQuestion(
+          function (error, rowcount) {
+            if (!error) {
+              this.getQuestionData(
+                this.questionNumber,
+                function (error, question) {
+                  if (error) {
+                   callback(error);
+                  } else if (rowcount > 0) {
+                    callback(null, 
+                      `Well done! ${message} was correct.\n\n ${this.direction}\n\n ${question}`
+                    );
+                  }
+                }.bind(this)
+              );
+            }
+          }.bind(this)
+        );
+      }
+    } else {
+      console.log("Incorrect Answer");
+      this.penaltyPoints += points.incorrect;
+      callback(null, "Bad luck! Try again");
+    }
   }
   /**
-   * Get all  necessary question data from DB
+   * Get all necessary question data from DB
    * @param {integer} questionId id of the question
    * @param {function} callback callback function
    */
@@ -62,8 +120,12 @@ module.exports.Game = class {
     db.getQuestionText(
       questionId,
       function (error, rows) {
-        this.extractQuestion(rows);
-        callback(error);
+        if(error){
+          callback(error);
+        }else{
+          this.extractQuestion(rows);
+          callback(null, this.formattedQuestion);
+        }
       }.bind(this)
     );
   }
@@ -84,11 +146,12 @@ module.exports.Game = class {
   }
   endGame(userInput, callback) {
     this.sessionEndTime = new Date();
+    this.status = statuses.COMPLETED.value;
     this.calculateGameSeconds();
     db.endGame(
       this.gameId,
       this.teamId,
-      "COMPLETED",
+      this.status,
       this.duration,
       this.answerPoints,
       this.penaltyPoints,
@@ -96,9 +159,9 @@ module.exports.Game = class {
         if (error) {
           callback(error);
         } else if (rowcount > 0 && !userInput) {
-          callback("Congratulations, you have completed the trail!");
+          callback(null, "Congratulations, you have completed the trail!");
         } else if (rowcount > 0 && userInput) {
-          callback("You've ended the game early.Thanks for playing this local trail");
+          callback(null, "You've ended the game early.Thanks for playing this local trail");
         }
       }
     );
@@ -112,9 +175,7 @@ module.exports.Game = class {
   isAnswerCorrect(userAnswer) {
     return this.answer.toUpperCase() === userAnswer.toUpperCase();
   }
-  // nextQuestion(responseMessage){
 
-  // }
   nextQuestion(callback) {
     console.log("Setting next question");
     this.timesAnsweredIncorrect = 0;
@@ -124,60 +185,26 @@ module.exports.Game = class {
   gameInProgress() {
     return "A game is already in progress.";
   }
-  processAnswer(message, callback) {
-    console.log("Processing Answer: " + message);
-    if (this.isAnswerCorrect(message)) {
-      //   this.nextQuestion()
-      console.log("Correct Answer");
-      this.answerPoints += points.correct;
-      if (this.lastQuestion === this.questionNumber) {
-        this.endGame(null, callback);
-      } else {
-        this.nextQuestion(
-          function (error, rowcount) {
-            if (!error) {
-              this.getQuestionData(
-                this.questionNumber,
-                function (error) {
-                  if (error) {
-                    callback(error);
-                  } else if (rowcount > 0) {
-                    callback(
-                      `Well done! ${message} was correct.\n\n ${this.direction}\n\n ${this.questionText}`
-                    );
-                  }
-                }.bind(this)
-              );
-            }
-          }.bind(this)
-        );
-      }
-    } else {
-      //TODO: write incorrect answer data to database (answers table)
-      console.log("Incorrect Answer");
-      this.penaltyPoints += points.incorrect;
-      this.timesAnsweredIncorrect++;
-      //add points to removed 
-      callback(null, "Bad luck! Try again");
-    }
-  }
 
   pauseGame(callback){
-    db.endGame(
-      this.gameId,
-      this.teamId,
-      "PAUSED",
-      this.duration,
-      this.answerPoints,
-      this.penaltyPoints,
-      function (error, rowcount) {
-        if (error) {
-          callback(error);
-        } else if (rowcount > 0) {
-          callback("Game Paused. The game time has stopped until you interact with this chat again.");
+      this.sessionEndTime = new Date();
+      this.status = statuses.PAUSED.value;
+      this.calculateGameSeconds();
+      db.endGame(
+        this.gameId,
+        this.teamId,
+        this.status,
+        this.duration,
+        this.answerPoints,
+        this.penaltyPoints,
+        function (error, rowcount) {
+          if (error) {
+            callback(error);
+          } else if (rowcount > 0) {
+            callback("Game Paused. The game time has stopped until you interact with this chat again.");
+          }
         }
-      }
-    );
+      );
   }
 
   skipAnswer(callback) {
@@ -234,7 +261,9 @@ module.exports.Game = class {
   }
 
   sessionDurationSeconds(){
-    let ms = this.sessionEndTime.getTime() - this.sessionStartTime.getTime();
+    //only calculate if there is a start time (If there isn't the game is in memory but paused/finished 
+    //and won't have a start time for this session)
+    let ms = this.sessionStartTime ? this.sessionEndTime.getTime() - this.sessionStartTime.getTime() : 0;
     return Math.round(ms/1000);
   }
 
@@ -326,18 +355,27 @@ module.exports.Game = class {
   set sessionEndTime(date){
     this._sessionEndTime = date;
   }
-};
+  get status(){
+    return this._status;    
+  }
+  set status(status){
+    this._status = status;
+  }
 
-// module.exports.Question = class Question{
-//     constructor(){
-//         this.questionText = ""
-//         this.questionNumber = ""
-//         this.correctAnswer = ""
-//         this.timesAnsweredIncorrect = 0
-//         this.points = 5
-//     }
-//     get questionText = function(){
-//         return this._questionText;
-//     }
-//     get questionNumber
-// }
+  get statusText(){
+    return Object.entries(statuses).find(status => status[1].value === this.status)[1].text;
+  }
+
+  get isPaused(){
+    return this.status === statuses.PAUSED.value;
+  }
+  get isInProgress(){
+    return this.status === statuses.IN_PROGRESS.value;
+  }
+  get isCompleted(){
+    return this.status === statuses.COMPLETED.value;
+  }
+  get formattedQuestion(){
+    return `Question ${this.questionNumber}/${this.lastQuestion}: ${this.questionText}`;
+  }
+};

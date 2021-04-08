@@ -27,11 +27,11 @@ var routeUserMessage = function(messageBody, callback){
         penaltyPoints: rows[0].penaltypoints,
         duration: rows[0].duration
       })
-      console.log("Reinstantiated game. Message being routed.")
+      console.log("Reinstantiated game from DB. Message being routed.")
       readMessage(message, gameInProgress, callback)
     })
   }else{
-    console.log("Game exists. Message being routed.")
+    console.log("Game already in memory. Message being routed.")
     readMessage(message, gameInProgress, callback)
   }
 }
@@ -40,15 +40,12 @@ function readMessage(message, gameInProgress, callback){
   //Initiate conversation
   if(keywords.isRequestingWelcome(message)){
     console.log("welcome/rules requested")
-    gameInProgress.getGameRules(callback)
+    // gameInProgress.getGameRules(callback)
+    gameInProgress.welcomeMessage(callback);
 
   } else if(keywords.isRequestingGameStart(message)) {
     console.log("Start game requested")
-    if(gameInProgress.gameStarted){
-      callback(gameInProgress.gameInProgress())
-    } else{
-      gameInProgress.startGame(callback)
-    } 
+    gameInProgress.startGame(callback);
   } else if(keywords.isRequestingPreviousAnswers(message)){
     console.log("Previous answers requested")
     callback(gameInProgress.answers)
@@ -70,14 +67,16 @@ function readMessage(message, gameInProgress, callback){
   } else if(keywords.isGamePause(message)){
     console.log("Pause Game");
     gameInProgress.pauseGame(callback);
+  } else if(keywords.isStatus(message)){
+    callback(gameInProgress.statusText); 
   }
   //answer if none of the above, do not accept an answer unless game is in play
-  else if(gameInProgress.gameStarted){
+  else if(gameInProgress.isInProgress){
     console.log("Message interpreted as an answer")
     gameInProgress.processAnswer(message, callback)
   }else{
     console.log("Message not understood")
-    callback("Sorry, I'm not sure what you're trying to do.")
+    callback("Sorry, I'm not sure what you're trying to do. Please make sure the game is in play. You can type \"status\".");
   }
 }
 

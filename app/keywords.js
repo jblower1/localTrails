@@ -38,3 +38,7 @@ module.exports.isGamePause = function(message){
 module.exports.isGameEnd = function(message){
   return message === "end"
 }
+
+module.exports.isStatus = function(message){
+  return message === "status";
+}
